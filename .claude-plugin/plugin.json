@@ -1,0 +1,19 @@
+{
+  "name": "browser-skill",
+  "description": "Web browser automation for AI agents. Wraps agent-browser with 60 tools for navigation, forms, logins, tabs, cookies, and persistent sessions.",
+  "version": "1.0.0",
+  "author": {
+    "name": "zm2231"
+  },
+  "homepage": "https://github.com/zm2231/browser-skill",
+  "repository": "https://github.com/zm2231/browser-skill",
+  "license": "MIT",
+  "keywords": [
+    "browser",
+    "automation",
+    "web",
+    "scraping",
+    "playwright",
+    "agent-browser"
+  ]
+}
