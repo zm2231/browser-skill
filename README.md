@@ -6,7 +6,8 @@ Web browser automation for Claude Code, OpenCode, and AI agents. Headless or hea
 
 ```bash
 npm install -g z-agent-browser
-z-agent-browser install   # downloads browser binaries
+z-agent-browser install
+mkdir -p ~/.z-agent-browser   # ensures stable socket path (not /tmp)
 ```
 
 Then install the skill:
@@ -33,6 +34,7 @@ If you're an LLM Agent helping set up browser-skill, follow these steps:
 ```bash
 npm install -g z-agent-browser
 z-agent-browser install
+mkdir -p ~/.z-agent-browser
 ```
 
 #### Step 2: Install the skill
