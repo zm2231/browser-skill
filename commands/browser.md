@@ -43,23 +43,53 @@ echo "AGENT_BROWSER_PERSIST=$AGENT_BROWSER_PERSIST"
 ls ~/.z-agent-browser/state/ 2>/dev/null || echo "NO_SAVED_AUTH"
 ```
 
-**If NO_SAVED_AUTH**, prompt user:
+**If NO_SAVED_AUTH**, prompt user with options:
 
-> "This is your first time using browser automation. Would you like to log into your accounts now so I can save your credentials for future use? I'll open a visible browser window for you to log in."
+> "This is your first time using browser automation. How would you like to set up authentication?
+> 
+> **Option 1: Import Chrome profile** (recommended) - Copies all your existing logins, cookies, localStorage, and saved passwords from Chrome.
+> 
+> **Option 2: Fresh login** - Log into sites manually in a new browser window.
+> 
+> Which do you prefer?"
 
-If user agrees:
-1. Open headed browser to a common login page (e.g., google.com or the target site):
-   ```bash
-   z-agent-browser open "$ARGUMENTS" --headed
-   ```
-2. Tell user: "Please log into any accounts you need. Let me know when you're done."
-3. After user confirms, close to save state:
-   ```bash
-   z-agent-browser close
-   ```
-4. State auto-saves with PERSIST=1. Continue to Phase 1.
+**If Option 1 (Import Chrome profile):**
 
-If user declines, proceed to Phase 1.
+```bash
+# Quit Chrome first
+pkill -9 "Google Chrome" 2>/dev/null || true
+
+# Copy profile
+cp -R "$HOME/Library/Application Support/Google/Chrome" /tmp/chrome-profile-copy
+
+# Launch with debugging
+"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
+  --remote-debugging-port=9222 \
+  --user-data-dir="/tmp/chrome-profile-copy" &
+
+# Wait for Chrome to start
+sleep 2
+
+# Connect z-agent-browser
+z-agent-browser connect 9222
+```
+
+Tell user: "Connected to your Chrome profile with all your existing logins!"
+
+**If Option 2 (Fresh login):**
+
+```bash
+z-agent-browser open "$ARGUMENTS" --headed
+```
+
+Tell user: "Please log into any accounts you need. Let me know when you're done."
+
+After user confirms:
+```bash
+z-agent-browser close
+```
+
+State auto-saves with PERSIST=1. Continue to Phase 1.
 
 ### Phase 1: Open URL
 
