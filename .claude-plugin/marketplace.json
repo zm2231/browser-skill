@@ -1,24 +1,25 @@
 {
   "name": "browser-skill-marketplace",
   "owner": {
-    "name": "zm2231"
+    "name": "zm2231",
+    "email": "zain@example.com"
   },
   "metadata": {
-    "description": "Web browser automation tools for AI agents",
+    "description": "Web browser automation for AI agents",
     "version": "1.0.0"
   },
   "plugins": [
     {
       "name": "browser-skill",
       "source": "./",
-      "description": "Web browser automation for AI agents. 60 tools wrapping agent-browser for navigation, form filling, authentication persistence, tab management, and web data extraction.",
+      "description": "Web browser automation for Claude Code and AI agents. Headless or headed mode, persistent auth, stealth mode, video recording.",
       "version": "1.0.0",
       "author": {
         "name": "zm2231"
       },
       "homepage": "https://github.com/zm2231/browser-skill",
       "category": "automation",
-      "tags": ["browser", "automation", "web", "scraping", "agent-browser", "playwright"]
+      "tags": ["browser", "automation", "playwright", "scraping", "testing", "stealth"]
     }
   ]
 }
