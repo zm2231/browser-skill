@@ -70,33 +70,56 @@ z-agent-browser fill @e2 "text"                # Fill input
 z-agent-browser close
 ```
 
-## CDP Auto-Detection
+## Login Persistence
 
-z-agent-browser now **auto-detects** Chrome on port 9222:
-- If Chrome is running with `--remote-debugging-port=9222` → connects automatically
-- If no Chrome on 9222 → launches fresh isolated browser
+### Option 1: State Save/Load (Recommended)
 
-## Use Your Chrome Logins
+Save login sessions to a JSON file and restore them later:
 
-To browse with all your existing logins:
+```bash
+# First time: Login manually in headed mode
+z-agent-browser start --headed
+z-agent-browser open "https://github.com"
+# [User logs in manually]
+z-agent-browser state save ~/.z-agent-browser/github.json
+z-agent-browser stop
+
+# Later: Restore session headlessly
+z-agent-browser start
+z-agent-browser state load ~/.z-agent-browser/github.json
+z-agent-browser open "https://github.com"  # Already logged in!
+```
+
+**Key points:**
+- Saves cookies, localStorage, sessionStorage to JSON
+- Portable and simple
+- Works on both Mac and Linux
+
+### Option 2: CDP Mode (For Real Chrome)
+
+Connect to your actual Chrome browser with saved passwords:
 
 ```bash
 # 1. Quit all Chrome instances
 pkill -9 "Google Chrome"
 
-# 2. Copy your Chrome profile
-cp -R "$HOME/Library/Application Support/Google/Chrome" ~/.z-agent-browser/chrome-profile
-
-# 3. Launch Chrome with debugging
+# 2. Launch Chrome with debugging (visible browser)
 "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
-  --remote-debugging-port=9222 \
-  --user-data-dir="$HOME/.z-agent-browser/chrome-profile" &
+  --remote-debugging-port=9222 &
 
-# 4. z-agent-browser auto-connects!
+# 3. z-agent-browser auto-connects!
 z-agent-browser open "https://github.com"  # You're logged in!
 ```
 
-Profile location: `~/.z-agent-browser/chrome-profile`
+**When to use which:**
+
+| Use Case | Recommended Mode |
+|----------|------------------|
+| Background automation | State Save/Load (headless) |
+| User needs to see what's happening | `start --headed` |
+| Sites needing saved Chrome passwords | CDP Mode |
+| User needs to interact (CAPTCHA, 2FA) | CDP Mode |
+| **Google/Gmail** | **CDP Mode** (detects headless) |
 
 ## Core Workflow
 
@@ -129,8 +152,9 @@ Profile location: `~/.z-agent-browser/chrome-profile`
 | Feature | Usage |
 |---------|-------|
 | Stealth mode | `--stealth` or `AGENT_BROWSER_STEALTH=1` |
-| Chrome profile | `--profile ~/.z-agent-browser/my-profile` |
-| CDP mode | `connect 9222` (or auto-detected) |
+| State save | `state save ~/.z-agent-browser/site.json` |
+| State load | `state load ~/.z-agent-browser/site.json` |
+| CDP mode | `connect 9222` (for real Chrome) |
 | Video recording | `record start ./demo.webm` / `record stop` |
 
 ## Full Documentation

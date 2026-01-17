@@ -32,16 +32,36 @@ z-agent-browser [options] <command> [arguments]
 
 ---
 
+## Browser Lifecycle
+
+```bash
+# Start browser with specific configuration
+z-agent-browser start                      # Headless (default)
+z-agent-browser start --headed             # Visible browser window
+z-agent-browser start --stealth            # Headless with anti-detection
+z-agent-browser start --headed --stealth   # Visible with anti-detection
+z-agent-browser start --profile <path>     # With Chrome profile
+
+# Check current mode
+z-agent-browser status                     # Returns: {launched, headless, stealth, profile}
+
+# Stop browser
+z-agent-browser stop                       # Same as 'close', stops daemon
+```
+
+**Note**: `start` automatically restarts browser if already running with different configuration.
+
+---
+
 ## Navigation
 
 ```bash
-z-agent-browser open <url> [--headed]     # Navigate to URL
+z-agent-browser open <url>                 # Navigate to URL
 z-agent-browser open <url> --headers '{"Authorization": "Bearer token"}'
 z-agent-browser back                       # Go back
 z-agent-browser forward                    # Go forward
 z-agent-browser reload                     # Reload page
-z-agent-browser close                      # Close browser
-```
+z-agent-browser stop                       # Close browser (alias: close)
 
 ### Special URL Schemes (Enhanced Fork)
 
@@ -443,23 +463,37 @@ Common args:
 
 ---
 
-## Profile Mode (Enhanced Fork)
+## Login Persistence (State Save/Load)
 
-Use a persistent Chrome profile directory:
+Persist login sessions using `state save/load`:
 
 ```bash
-# Use specific profile
-z-agent-browser --profile ~/.z-agent-browser/my-profile open "https://example.com"
+# First time: Login manually in headed mode
+z-agent-browser start --headed
+z-agent-browser open "https://github.com"
+# [User logs in manually]
+z-agent-browser state save ~/.z-agent-browser/github.json
+z-agent-browser stop
 
-# Or via environment variable
-AGENT_BROWSER_PROFILE=~/.z-agent-browser/my-profile z-agent-browser open "https://example.com"
+# Later: Restore session headlessly  
+z-agent-browser start
+z-agent-browser state load ~/.z-agent-browser/github.json
+z-agent-browser open "https://github.com"  # Already logged in!
 ```
 
-Profile mode:
-- Keeps extensions, bookmarks, passwords
-- Maintains consistent browser fingerprint
-- Stores history and settings
-- Cannot be combined with CDP mode
+State save/load:
+- Saves cookies, localStorage, sessionStorage to JSON
+- Portable across sessions and restarts
+- Works on both Mac and Linux
+
+**State Save/Load vs CDP Mode:**
+
+| Feature | State Save/Load | CDP Mode |
+|---------|-----------------|----------|
+| Headless support | Yes | Depends on Chrome launch |
+| Login persistence | Via JSON file | Uses real Chrome |
+| Saved passwords | No (use CDP) | Yes |
+| Best for | Background automation | Real Chrome, saved passwords |
 
 ---
 
@@ -475,32 +509,35 @@ Only use for trusted local servers.
 
 ---
 
-## CDP Mode
+## CDP Mode (Interactive)
 
-z-agent-browser **auto-detects** Chrome on port 9222. If Chrome is running with debugging enabled, it connects automatically.
+Connect to a running Chrome browser. Best for interactive use where user needs their real Chrome with saved passwords, or for CAPTCHA/2FA.
 
-To set up Chrome with your logins:
+**Important:** In CDP mode, headless/headed is determined by how Chrome was launched, not by z-agent-browser flags.
+
+To set up Chrome for CDP:
 
 ```bash
 # 1. Quit existing Chrome
 pkill -9 "Google Chrome"
 
-# 2. Copy profile to persistent location
-cp -R "$HOME/Library/Application Support/Google/Chrome" ~/.z-agent-browser/chrome-profile
-
-# 3. Launch Chrome with debugging
+# 2. Launch Chrome with debugging (visible browser)
 "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
-  --remote-debugging-port=9222 \
-  --user-data-dir="$HOME/.z-agent-browser/chrome-profile" &
+  --remote-debugging-port=9222 &
 
-# 4. z-agent-browser auto-connects!
+# 3. z-agent-browser auto-connects!
 z-agent-browser open "https://example.com"
 z-agent-browser snapshot -i
 ```
 
+For **headless CDP** (rare - usually State Save/Load is better):
+```bash
+google-chrome --headless=new --remote-debugging-port=9222 &
+```
+
 ### Connect Command (Enhanced Fork)
 
-If using the enhanced fork (zm2231/agent-browser), use `connect` once to establish persistent CDP:
+Use `connect` once to establish persistent CDP:
 
 ```bash
 z-agent-browser connect 9222
@@ -511,6 +548,8 @@ z-agent-browser close
 ```
 
 This saves tokens by not requiring `--cdp 9222` on every command.
+
+**For headless automation with your logins, use Profile Mode instead** (see above).
 
 ---
 

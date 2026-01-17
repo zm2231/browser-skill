@@ -9,7 +9,14 @@ Automate web browsing using z-agent-browser CLI.
 
 ## How It Works
 
-z-agent-browser now **auto-detects** Chrome on port 9222. If Chrome is running with `--remote-debugging-port=9222`, it connects automatically with all your logins.
+z-agent-browser supports multiple browser modes:
+
+| Mode | Command | Best For |
+|------|---------|----------|
+| **Headless** | `start` | Background automation |
+| **Headed** | `start --headed` | When user needs to watch/login |
+| **Stealth** | `start --stealth` | Sites with bot detection |
+| **CDP** | `connect 9222` | Interactive debugging, real Chrome |
 
 ## Execution Protocol
 
@@ -28,15 +35,49 @@ npm install -g z-agent-browser
 z-agent-browser install
 ```
 
-**Check if already connected to Chrome:**
+### Recommended: Use `start` Command
+
+The `start` command configures browser mode explicitly (auto-restarts if already running):
 
 ```bash
-z-agent-browser get url 2>/dev/null && echo "CONNECTED" || echo "NOT_CONNECTED"
+# Background automation (headless)
+z-agent-browser start
+z-agent-browser open "$ARGUMENTS"
+
+# User needs to watch or login
+z-agent-browser start --headed
+z-agent-browser open "$ARGUMENTS"
+
+# With anti-detection (sites that block bots)
+z-agent-browser start --stealth
+z-agent-browser open "$ARGUMENTS"
 ```
 
-**If NOT_CONNECTED**, set up Chrome with your profile:
+**Check current mode:** `z-agent-browser status`
 
-Tell user: "I'll connect to your Chrome browser with all your existing logins. I need to close Chrome first - save any work!"
+### Login Persistence (State Save/Load)
+
+To persist logins across sessions:
+
+```bash
+# First time: Login manually in headed mode
+z-agent-browser start --headed
+z-agent-browser open "https://site.com"
+# [User logs in manually]
+z-agent-browser state save ~/.z-agent-browser/site.json
+z-agent-browser stop
+
+# Later: Restore session headlessly
+z-agent-browser start
+z-agent-browser state load ~/.z-agent-browser/site.json
+z-agent-browser open "https://site.com"  # Already logged in!
+```
+
+### Alternative: CDP Mode (Interactive)
+
+**For interactive use** where user needs their real Chrome with saved passwords:
+
+Tell user: "I'll connect to your Chrome browser. I need to close Chrome first - save any work!"
 
 Wait for user confirmation, then:
 
@@ -45,19 +86,13 @@ Wait for user confirmation, then:
 pkill -9 "Google Chrome" 2>/dev/null || true
 sleep 1
 
-# Copy profile to persistent location
-PROFILE="$HOME/.z-agent-browser/chrome-profile"
-mkdir -p "$HOME/.z-agent-browser"
-cp -R "$HOME/Library/Application Support/Google/Chrome" "$PROFILE"
-
-# Launch Chrome with debugging
+# Launch Chrome with debugging (visible browser)
 "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
-  --remote-debugging-port=9222 \
-  --user-data-dir="$PROFILE" &
+  --remote-debugging-port=9222 &
 
 sleep 2
 
-# Connect z-agent-browser (or it will auto-connect on first command)
+# Connect z-agent-browser
 z-agent-browser connect 9222
 ```
 
@@ -121,22 +156,26 @@ If page requires login that can't be automated:
 
 | Action | Command |
 |--------|---------|
+| Start headless | `z-agent-browser start` |
+| Start headed | `z-agent-browser start --headed` |
+| Start with stealth | `z-agent-browser start --stealth` |
+| Check mode | `z-agent-browser status` |
 | Navigate | `z-agent-browser open <url>` |
-| Navigate (visible) | `z-agent-browser open <url> --headed` |
 | Get elements | `z-agent-browser snapshot -i` |
 | Click | `z-agent-browser click @ref` |
 | Fill | `z-agent-browser fill @ref "text"` |
 | Press key | `z-agent-browser press Enter` |
 | Screenshot | `z-agent-browser screenshot` |
-| Close daemon | `z-agent-browser close` |
-| Connect to Chrome | `z-agent-browser connect 9222` |
+| Save login state | `z-agent-browser state save <path>` |
+| Load login state | `z-agent-browser state load <path>` |
+| Stop browser | `z-agent-browser stop` |
+| Connect to Chrome (CDP) | `z-agent-browser connect 9222` |
 
 ## Important Notes
 
-- **CDP Auto-detection**: z-agent-browser checks port 9222 first - if Chrome is there, it connects
-- **Profile location**: `~/.z-agent-browser/chrome-profile`
+- **State save/load** - Saves cookies, localStorage, sessionStorage to JSON file
+- **CDP Mode** - For real Chrome with saved passwords (headless/headed depends on how Chrome was launched)
 - **Always re-snapshot** after clicks that cause navigation
 - **Use refs** (`@e1`) not CSS selectors
-- Chrome profile copy preserves all logins, cookies, localStorage, extensions
 
 For full reference, see [skill.md](../skills/browser-automation/skill.md).
