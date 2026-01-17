@@ -5,7 +5,13 @@ argument-hint: "<url>"
 
 # Browser Automation
 
-Automate web browsing using z-agent-browser CLI. Uses system Chrome by default, falls back to bundled Chromium.
+Automate web browsing using z-agent-browser CLI.
+
+## CRITICAL: Browser Profiles
+
+`z-agent-browser open` uses your system Chrome binary but with an **isolated profile** (no existing logins).
+
+**To use existing logins**, you MUST connect to Chrome with a profile copy. Always do this unless user explicitly requests "fresh/isolated browser".
 
 ## Execution Protocol
 
@@ -37,73 +43,56 @@ fi
 echo "AGENT_BROWSER_PERSIST=$AGENT_BROWSER_PERSIST"
 ```
 
-**Check if credentials exist:**
+**Check if already connected to Chrome:**
 
 ```bash
-ls ~/.z-agent-browser/state/ 2>/dev/null || echo "NO_SAVED_AUTH"
+z-agent-browser get url 2>/dev/null && echo "CONNECTED" || echo "NOT_CONNECTED"
 ```
 
-**If NO_SAVED_AUTH**, prompt user with options:
+**If NOT_CONNECTED**, set up Chrome profile (default):
 
-> "This is your first time using browser automation. How would you like to set up authentication?
-> 
-> **Option 1: Import Chrome profile** (recommended) - Copies all your existing logins, cookies, localStorage, and saved passwords from Chrome.
-> 
-> **Option 2: Fresh login** - Log into sites manually in a new browser window.
-> 
-> Which do you prefer?"
+Tell user: "I'll connect to your Chrome browser with all your existing logins. I need to close Chrome first - save any work!"
 
-**If Option 1 (Import Chrome profile):**
+Wait for user confirmation, then:
 
 ```bash
-# Quit Chrome first
+# Quit Chrome
 pkill -9 "Google Chrome" 2>/dev/null || true
+sleep 1
 
-# Copy profile
+# Copy profile to temp location
 cp -R "$HOME/Library/Application Support/Google/Chrome" /tmp/chrome-profile-copy
 
-# Launch with debugging
+# Launch Chrome with debugging
 "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
   --remote-debugging-port=9222 \
   --user-data-dir="/tmp/chrome-profile-copy" &
 
-# Wait for Chrome to start
 sleep 2
 
 # Connect z-agent-browser
 z-agent-browser connect 9222
 ```
 
-Tell user: "Connected to your Chrome profile with all your existing logins!"
+Tell user: "Connected to your Chrome with all your existing logins!"
 
-**If Option 2 (Fresh login):**
+**Only if user explicitly requests "fresh browser" or "Chrome for Testing":**
 
 ```bash
 z-agent-browser open "$ARGUMENTS" --headed
 ```
 
-Tell user: "Please log into any accounts you need. Let me know when you're done."
+This opens isolated Chromium with no saved logins.
 
-After user confirms:
-```bash
-z-agent-browser close
-```
+### Phase 1: Navigate to URL
 
-State auto-saves with PERSIST=1. Continue to Phase 1.
-
-### Phase 1: Open URL
-
-Navigate to the target URL:
+After Chrome is connected, navigate:
 
 ```bash
 z-agent-browser open "$ARGUMENTS"
 ```
 
-**If daemon is already running in different mode**, close first:
-```bash
-z-agent-browser close
-z-agent-browser open "$ARGUMENTS"
-```
+This navigates the connected Chrome (with your logins) to the target URL.
 
 ### Phase 2: Get Page State
 
@@ -166,9 +155,9 @@ If page requires login that can't be automated:
 
 ## Important Notes
 
-- **Daemon locks mode at startup**: Can't switch headed/headless without closing
+- **NEVER use Chrome for Testing** unless user explicitly requests it - always connect to their real Chrome
 - **Always re-snapshot** after clicks that cause navigation
 - **Use refs** (`@e1`) not CSS selectors
-- Enable `AGENT_BROWSER_PERSIST=1` for auto-save/restore cookies
+- Chrome profile copy preserves all logins, cookies, localStorage, extensions
 
 For full reference, see [skill.md](../skills/browser-automation/skill.md).
