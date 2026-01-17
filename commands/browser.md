@@ -5,7 +5,7 @@ argument-hint: "[url|connect|disconnect|status]"
 
 # Browser Automation
 
-@skills/browser-automation/skill.md
+For complete browser automation details, see [browser-automation skill](../skills/browser-automation/skill.md).
 
 ## Command Usage
 
