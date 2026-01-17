@@ -92,6 +92,50 @@ Profile location: `~/.z-agent-browser/chrome-profile`
 5. **Use refs (@e1, @e2)**: Not CSS selectors
 6. **Re-snapshot after navigation**: Refs change when page changes
 
+## Token Efficiency: eval vs snapshot
+
+**Use `snapshot -i` for navigation** (finding what to click):
+```bash
+z-agent-browser snapshot -i   # ~200-500 tokens for interactive elements
+```
+
+**Use `eval` for data extraction** (getting information):
+```bash
+# Instead of parsing a 5000-token snapshot, extract exactly what you need:
+z-agent-browser eval "document.querySelectorAll('.item').length"
+z-agent-browser eval "[...document.querySelectorAll('a')].map(a => a.href)"
+```
+
+| Task | Best Tool | Why |
+|------|-----------|-----|
+| Find button to click | `snapshot -i` | Need refs for interaction |
+| Count items on page | `eval` | Direct answer, ~10 tokens |
+| Extract all emails | `eval` | Returns just the data |
+| Fill a form | `snapshot -i` + refs | Need refs for fill targets |
+| Check if element exists | `eval` | Boolean answer |
+| Get table data | `eval` | Structured extraction |
+
+**Example: Extract top spam senders from Gmail**
+
+Bad (snapshot approach - ~5000 tokens):
+```bash
+z-agent-browser snapshot -i   # Returns 200 elements, you parse them
+```
+
+Good (eval approach - ~100 tokens):
+```bash
+z-agent-browser eval "
+  const emails = [...document.querySelectorAll('[email]')].map(e => e.getAttribute('email'));
+  const counts = emails.reduce((acc, e) => (acc[e] = (acc[e]||0) + 1, acc), {});
+  Object.entries(counts).sort((a,b) => b[1]-a[1]).slice(0,10);
+"
+# Returns: [["spam@example.com", 6], ["news@site.com", 4], ...]
+```
+
+**Rule of thumb**: 
+- Need to CLICK something? → `snapshot -i` + refs
+- Need to READ/COUNT/EXTRACT data? → `eval`
+
 ## Tips
 
 1. When user needs to log in manually → use `--headed` flag
