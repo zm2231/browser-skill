@@ -16,7 +16,7 @@ Web browser automation for Claude Code, OpenCode, and AI agents. Built on [agent
 ```bash
 # Install (enhanced fork - recommended)
 git clone https://github.com/zm2231/agent-browser.git
-cd z-agent-browser
+cd agent-browser
 pnpm install && pnpm build && pnpm build:native
 npm link
 z-agent-browser install
@@ -38,7 +38,7 @@ z-agent-browser open "https://example.com" --headed
 Install from our fork with stealth mode, auto-persistence, and more:
 ```bash
 git clone https://github.com/zm2231/agent-browser.git
-cd z-agent-browser
+cd agent-browser
 pnpm install
 pnpm build
 pnpm build:native   # requires Rust: https://rustup.rs
@@ -75,15 +75,23 @@ cd browser-skill
 /plugin install browser-skill@browser-skill-marketplace
 ```
 
-### Option 4: Upstream npm (Basic Features Only)
+### Option 4: npm (Enhanced Fork)
 ```bash
 npm install -g z-agent-browser
 z-agent-browser install
+mkdir -p ~/.browser ~/.z-agent-browser
+```
+
+### Option 5: Upstream npm (Basic Features Only)
+For the original vercel-labs version without enhanced features:
+```bash
+npm install -g agent-browser
+agent-browser install
 mkdir -p ~/.browser
 ```
 Note: Upstream lacks stealth mode, auto-persistence, profile mode, and other enhanced features.
 
-### Option 5: Claude Skill Only
+### Option 6: Claude Skill Only
 Copy the skill files to your Claude skills directory:
 ```bash
 mkdir -p ~/.claude/skills/browser-automation
@@ -248,6 +256,24 @@ AGENT_BROWSER_STREAM_PORT=9223 z-agent-browser open "https://example.com" --head
 # Connect to ws://localhost:9223 for live frames
 ```
 
+### Playwright MCP Mode (Experimental)
+Control your existing Chrome browser via the Playwright MCP bridge extension. Uses your logged-in sessions and extensions.
+
+```bash
+# 1. Install "Playwright MCP Bridge" Chrome extension
+# 2. Click extension icon to get token
+# 3. Set environment variables:
+export PLAYWRIGHT_MCP_EXTENSION_TOKEN=your-token
+export AGENT_BROWSER_BACKEND=playwright-mcp
+
+# Commands work the same
+z-agent-browser open "https://example.com"
+z-agent-browser snapshot -i
+z-agent-browser click @e1
+```
+
+Note: Some features unavailable in MCP mode (scroll, get text/html, video recording, state save/load). Use native mode for full feature support.
+
 ## Multiple Sessions
 
 Run parallel isolated browser instances for multi-worker scenarios:
@@ -318,11 +344,14 @@ Recording preserves cookies and storage from your current session.
 
 | Path | Purpose |
 |------|---------|
-| `~/.browser/auth.json` | Default saved auth state |
-| `~/.browser/auth-{site}.json` | Per-site auth (optional) |
-| `~/.browser/chrome-profile/` | CDP mode Chrome data |
+| `~/.z-agent-browser/run/` | Daemon socket and PID files |
+| `~/.z-agent-browser/run/default.sock` | Default session Unix socket |
+| `~/.z-agent-browser/run/default.pid` | Default session daemon PID |
 | `~/.z-agent-browser/sessions/` | Auto-persist state files (--persist flag) |
 | `~/.z-agent-browser/sessions/default.json` | Default session auto-persist |
+| `~/.browser/auth.json` | Manually saved auth state |
+| `~/.browser/auth-{site}.json` | Per-site auth (optional) |
+| `~/.browser/chrome-profile/` | CDP mode Chrome data |
 
 ## Self-Signed Certificates (Enhanced Fork)
 
@@ -397,7 +426,7 @@ browser-skill/
 
 If you are an AI agent reading this repo, here is how to set up browser automation:
 
-1. Check if z-agent-browser is installed: `which agent-browser`
+1. Check if z-agent-browser is installed: `which z-agent-browser`
 2. If not installed, install from enhanced fork:
    ```bash
    git clone https://github.com/zm2231/agent-browser.git /tmp/agent-browser-install

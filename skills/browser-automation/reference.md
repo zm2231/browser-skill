@@ -332,6 +332,54 @@ Stealth mode applies evasions for:
 | `AGENT_BROWSER_USER_AGENT` | Custom User-Agent string |
 | `AGENT_BROWSER_IGNORE_HTTPS_ERRORS` | Set to "1" to skip SSL validation |
 | `NO_COLOR` | Disable colored output (any value) |
+| `AGENT_BROWSER_BACKEND` | Backend: `native` (default) or `playwright-mcp` |
+| `PLAYWRIGHT_MCP_EXTENSION_TOKEN` | Token from Chrome extension (required for MCP mode) |
+| `PLAYWRIGHT_MCP_COMMAND` | Command to spawn MCP server (default: `npx`) |
+| `PLAYWRIGHT_MCP_ARGS` | Space-separated args (default: `@playwright/mcp@latest --extension`) |
+
+---
+
+## Playwright MCP Mode
+
+Control your existing Chrome browser via the Playwright MCP extension instead of launching a dedicated Chromium.
+
+### Setup
+
+1. Install "Playwright MCP Bridge" extension from Chrome Web Store
+2. Click extension icon to get your token
+3. Set environment variables:
+
+```bash
+export PLAYWRIGHT_MCP_EXTENSION_TOKEN=your-token-here
+export AGENT_BROWSER_BACKEND=playwright-mcp
+```
+
+### Feature Compatibility
+
+| Feature | Native | MCP |
+|---------|--------|-----|
+| open, back, close | Yes | Yes |
+| forward, reload | Yes | No |
+| snapshot | Yes | Yes |
+| click, fill, type, press | Yes | Yes |
+| hover, check, uncheck, select | Yes | Yes |
+| drag, upload | Yes | Yes |
+| scroll, scrollintoview | Yes | No |
+| get text/html/value/attr | Yes | No |
+| get title/url | Yes | Yes (via snapshot) |
+| is visible/enabled/checked | Yes | No |
+| screenshot | Yes | Yes |
+| pdf | Yes | No |
+| video recording | Yes | No |
+| state save/load | Yes | No |
+| cookies, storage | Yes | No |
+| stealth mode | Yes | No |
+| profile mode | Yes | No |
+| CDP connect | Yes | No |
+| network routes | Yes | No |
+| tabs | Yes | Yes |
+| console, eval | Yes | Yes |
+| dialog | Yes | Yes |
 
 ---
 

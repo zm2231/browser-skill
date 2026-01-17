@@ -9,7 +9,7 @@ echo "=== Enhanced Fork Features Demo ==="
 echo ""
 echo "Prerequisites:"
 echo "  - Install enhanced fork: see install.sh option 1"
-echo "  - Or: git clone https://github.com/zm2231/agent-browser.git && cd z-agent-browser && pnpm install && pnpm build && npm link"
+echo "  - Or: git clone https://github.com/zm2231/agent-browser.git && cd agent-browser && pnpm install && pnpm build && npm link"
 echo ""
 
 # 1. Stealth mode: bypass bot detection
@@ -29,7 +29,7 @@ z-agent-browser --persist open "https://github.com/login" --headed
 echo "   (Log in manually, then press Enter to continue)"
 read -r
 z-agent-browser close
-echo "   State saved to ~/.agent-browser/sessions/default.json"
+echo "   State saved to ~/.z-agent-browser/sessions/default.json"
 echo ""
 
 echo "   Second run: auth auto-restored"
@@ -107,7 +107,7 @@ echo "=== Demo Complete ==="
 echo ""
 echo "Enhanced fork features:"
 echo "  --stealth              Bypass bot detection (playwright-extra)"
-echo "  --persist              Auto-save/load to ~/.agent-browser/sessions/"
+echo "  --persist              Auto-save/load to ~/.z-agent-browser/sessions/"
 echo "  --state <path>         Explicit state file"
 echo "  --profile <path>       Persistent Chrome profile directory"
 echo "  --user-agent <string>  Custom User-Agent"
