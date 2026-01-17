@@ -15,30 +15,40 @@ npm install -g z-agent-browser
 z-agent-browser install
 ```
 
-## Important Notes
+## Recommended Configuration
 
-**Daemon behavior**: The browser runs as a persistent daemon. Environment variables (headed, stealth, etc.) are set at daemon startup and cannot be changed mid-session.
+Use your system Chrome (not the bundled "Chrome for Testing") with auth persistence:
 
-**Mode switching**: Close the browser to switch between headed/headless modes:
 ```bash
-z-agent-browser open "https://site.com" --headed   # Headed session
-z-agent-browser state save ~/.browser/auth.json
-z-agent-browser close                              # Kill daemon
-
-z-agent-browser state load ~/.browser/auth.json    # Fresh daemon (headless)
-z-agent-browser open "https://site.com"            # Cookies preserved
+# Add to shell profile (~/.zshrc or ~/.bashrc)
+export AGENT_BROWSER_EXECUTABLE_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+export AGENT_BROWSER_PERSIST=1
 ```
 
-**When to use headed mode**: Use `--headed` when you need the user to:
-- Log in manually (captchas, 2FA, OAuth)
-- Solve CAPTCHAs
-- Verify visual state
-- Debug issues
+This gives you:
+- Your existing cookies and logins
+- Auth automatically saved/restored between sessions
+- No confusing "Chrome for Testing" window
+
+## Important Notes
+
+**Daemon behavior**: The browser runs as a persistent daemon. Settings (headed/headless, stealth, etc.) are locked at daemon startup.
+
+**To change modes**: Close the daemon first, then reopen:
+```bash
+z-agent-browser close
+z-agent-browser open "https://site.com" --headed   # Now in headed mode
+```
+
+**When to use headed mode**: 
+- User needs to log in manually
+- CAPTCHAs or 2FA
+- Debugging visual issues
 
 ## Core Workflow
 
 1. Navigate: `z-agent-browser open <url>`
-2. Snapshot: `z-agent-browser snapshot -i` (returns elements with refs like `@e1`, `@e2`)
+2. Snapshot: `z-agent-browser snapshot -i` (returns refs like `@e1`, `@e2`)
 3. Interact using refs from snapshot
 4. Re-snapshot after navigation or DOM changes
 
@@ -46,9 +56,10 @@ z-agent-browser open "https://site.com"            # Cookies preserved
 
 ```bash
 # Navigation
-z-agent-browser open <url>        # Navigate
+z-agent-browser open <url>        # Navigate (headless by default)
+z-agent-browser open <url> --headed  # Visible browser
 z-agent-browser back              # Go back
-z-agent-browser close             # Close browser
+z-agent-browser close             # Close browser daemon
 
 # Inspection
 z-agent-browser snapshot -i       # Interactive elements (recommended)
@@ -72,50 +83,76 @@ z-agent-browser eval "js code"    # Run JavaScript
 
 For complete command reference, see [reference.md](reference.md).
 
-## Auth Persistence
+## Auth Workflow
+
+With `AGENT_BROWSER_PERSIST=1` set (recommended):
 
 ```bash
-# Save after login
-z-agent-browser state save ~/.browser/auth.json
+# First time: login in headed mode
+z-agent-browser open "https://github.com/login" --headed
+# User logs in manually...
+z-agent-browser close   # Auth auto-saved
 
-# Load in future sessions
-z-agent-browser state load ~/.browser/auth.json
-z-agent-browser open "https://app.example.com"
+# Later: auth auto-restored
+z-agent-browser open "https://github.com"   # Already logged in!
 ```
 
-## Backend Modes
+Without persist, use manual state save/load:
+```bash
+z-agent-browser state save ~/.browser/github.json
+z-agent-browser state load ~/.browser/github.json
+```
 
-Two backends available. Commands work the same for both.
+## Browser Modes
 
-### Native Mode (Default)
+### System Chrome + Persist (Recommended)
 
-Launches dedicated Chromium. Full feature support.
+Uses your actual Chrome with your cookies and extensions:
+
+```bash
+export AGENT_BROWSER_EXECUTABLE_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+export AGENT_BROWSER_PERSIST=1
+z-agent-browser open "https://example.com"
+```
+
+### Bundled Chromium (Default if no executable set)
+
+Uses Playwright's "Chrome for Testing" - isolated, no existing cookies:
 
 ```bash
 z-agent-browser open "https://example.com"
 ```
 
-### Playwright MCP Mode
+### CDP Mode (Control existing Chrome)
 
-Controls your existing Chrome via Playwright MCP extension. Useful for:
-- Using your logged-in sessions and extensions
-- Watching AI actions in real-time
+Connect to Chrome you launched with `--remote-debugging-port`:
 
 ```bash
-export PLAYWRIGHT_MCP_EXTENSION_TOKEN=your-token
+# In another terminal:
+"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
+  --remote-debugging-port=9222 &
+
+# Connect:
+z-agent-browser connect 9222
+z-agent-browser open "https://example.com"
+```
+
+### Playwright MCP Mode (Experimental)
+
+Control your daily-driver Chrome via extension:
+
+```bash
 export AGENT_BROWSER_BACKEND=playwright-mcp
+export PLAYWRIGHT_MCP_EXTENSION_TOKEN=<from extension>
 z-agent-browser open "https://example.com"
 ```
 
-**Setup**: Install "Playwright MCP Bridge" Chrome extension, click icon to get token.
-
-**Limitations**: Some features unavailable (scroll, get text/html, video recording, state save/load). See [reference.md](reference.md) for full compatibility.
+Limited feature support - see [reference.md](reference.md).
 
 ## Tips
 
 1. Always use `snapshot -i` to reduce output size
 2. Use refs (@e1, @e2) rather than CSS selectors
 3. Re-snapshot after navigation or DOM changes
-4. Save auth state after successful login
-5. Use `--headed` when you need user assistance
-6. Kill daemon before changing env vars: `z-agent-browser close`
+4. Use `--headed` when you need user assistance
+5. Close daemon before changing modes: `z-agent-browser close`
