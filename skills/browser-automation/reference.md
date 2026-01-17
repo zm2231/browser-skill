@@ -327,7 +327,8 @@ Stealth mode applies evasions for:
 | `AGENT_BROWSER_EXECUTABLE_PATH` | Custom browser executable |
 | `AGENT_BROWSER_PROFILE` | Default profile directory path |
 | `AGENT_BROWSER_STATE` | Default state file path |
-| `AGENT_BROWSER_PERSIST` | Set to "1" to enable auto-persistence |
+| `AGENT_BROWSER_PERSIST` | Set to "1" to enable cookie/localStorage persistence |
+| `AGENT_BROWSER_CDP_PORT` | CDP port to auto-detect (default: 9222) |
 | `AGENT_BROWSER_ARGS` | Comma-separated browser launch args |
 | `AGENT_BROWSER_USER_AGENT` | Custom User-Agent string |
 | `AGENT_BROWSER_IGNORE_HTTPS_ERRORS` | Set to "1" to skip SSL validation |
@@ -448,10 +449,10 @@ Use a persistent Chrome profile directory:
 
 ```bash
 # Use specific profile
-z-agent-browser --profile ~/.browser/my-profile open "https://example.com"
+z-agent-browser --profile ~/.z-agent-browser/my-profile open "https://example.com"
 
 # Or via environment variable
-AGENT_BROWSER_PROFILE=~/.browser/my-profile z-agent-browser open "https://example.com"
+AGENT_BROWSER_PROFILE=~/.z-agent-browser/my-profile z-agent-browser open "https://example.com"
 ```
 
 Profile mode:
@@ -476,20 +477,25 @@ Only use for trusted local servers.
 
 ## CDP Mode
 
-Connect to an existing Chrome instance:
+z-agent-browser **auto-detects** Chrome on port 9222. If Chrome is running with debugging enabled, it connects automatically.
+
+To set up Chrome with your logins:
 
 ```bash
-# First, start Chrome with remote debugging (in another terminal):
-/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome \
+# 1. Quit existing Chrome
+pkill -9 "Google Chrome"
+
+# 2. Copy profile to persistent location
+cp -R "$HOME/Library/Application Support/Google/Chrome" ~/.z-agent-browser/chrome-profile
+
+# 3. Launch Chrome with debugging
+"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
   --remote-debugging-port=9222 \
-  --user-data-dir="$HOME/.browser/chrome-profile"
+  --user-data-dir="$HOME/.z-agent-browser/chrome-profile" &
 
-# Or use the provided script:
-./scripts/start-chrome.sh
-
-# Then connect via CDP:
-z-agent-browser --cdp 9222 open "https://example.com"
-z-agent-browser --cdp 9222 snapshot -i
+# 4. z-agent-browser auto-connects!
+z-agent-browser open "https://example.com"
+z-agent-browser snapshot -i
 ```
 
 ### Connect Command (Enhanced Fork)

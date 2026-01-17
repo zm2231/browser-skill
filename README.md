@@ -1,6 +1,6 @@
 # Browser Skill for AI Agents
 
-Web browser automation for Claude Code, OpenCode, and AI agents. Headless or headed mode, persistent auth, stealth mode, video recording.
+Web browser automation for Claude Code, OpenCode, and AI agents. Uses your Chrome logins via CDP auto-detection.
 
 ## Installation
 
@@ -35,16 +35,7 @@ npm install -g z-agent-browser
 z-agent-browser install
 ```
 
-#### Step 2: Enable auth persistence
-
-```bash
-if ! grep -q "AGENT_BROWSER_PERSIST" ~/.zshrc 2>/dev/null; then
-  echo 'export AGENT_BROWSER_PERSIST=1' >> ~/.zshrc
-fi
-export AGENT_BROWSER_PERSIST=1
-```
-
-#### Step 3: Install the skill
+#### Step 2: Install the skill
 
 Prompt user to run these commands (copy-paste for them):
 
@@ -55,7 +46,7 @@ Prompt user to run these commands (copy-paste for them):
 
 Wait for user to confirm they ran the commands.
 
-#### Step 4: Verify
+#### Step 3: Verify
 
 ```bash
 z-agent-browser open "https://example.com"
@@ -63,7 +54,7 @@ z-agent-browser snapshot -i
 z-agent-browser close
 ```
 
-#### Step 5: Confirm to user
+#### Step 4: Confirm to user
 
 Say: "Browser automation is ready! Key commands: `open`, `snapshot -i`, `click @ref`, `fill @ref "text"`, `close`."
 
@@ -78,6 +69,34 @@ z-agent-browser click @e1                      # Click by ref
 z-agent-browser fill @e2 "text"                # Fill input
 z-agent-browser close
 ```
+
+## CDP Auto-Detection
+
+z-agent-browser now **auto-detects** Chrome on port 9222:
+- If Chrome is running with `--remote-debugging-port=9222` → connects automatically
+- If no Chrome on 9222 → launches fresh isolated browser
+
+## Use Your Chrome Logins
+
+To browse with all your existing logins:
+
+```bash
+# 1. Quit all Chrome instances
+pkill -9 "Google Chrome"
+
+# 2. Copy your Chrome profile
+cp -R "$HOME/Library/Application Support/Google/Chrome" ~/.z-agent-browser/chrome-profile
+
+# 3. Launch Chrome with debugging
+"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
+  --remote-debugging-port=9222 \
+  --user-data-dir="$HOME/.z-agent-browser/chrome-profile" &
+
+# 4. z-agent-browser auto-connects!
+z-agent-browser open "https://github.com"  # You're logged in!
+```
+
+Profile location: `~/.z-agent-browser/chrome-profile`
 
 ## Core Workflow
 
@@ -95,63 +114,24 @@ z-agent-browser close
 | Click | `click @e1` |
 | Fill input | `fill @e2 "text"` |
 | Screenshot | `screenshot [path]` |
-| Save auth | `state save ~/.browser/auth.json` |
-| Load auth | `state load ~/.browser/auth.json` |
 | Headed mode | `open <url> --headed` |
+| Connect CDP | `connect 9222` |
 | Close | `close` |
-
-## Authentication Workflow
-
-```bash
-# Login once (headed so user can log in manually)
-z-agent-browser open "https://site.com/login" --headed
-# User logs in...
-z-agent-browser state save ~/.browser/auth.json
-z-agent-browser close
-
-# Later sessions (headless, cookies preserved)
-z-agent-browser state load ~/.browser/auth.json
-z-agent-browser open "https://site.com"
-```
 
 ## Important Notes
 
-**Daemon behavior**: Environment variables (headed, stealth) are set at daemon startup. To switch modes, close the browser first with `z-agent-browser close`.
+**Daemon behavior**: z-agent-browser runs as a persistent daemon. To switch modes, close first with `z-agent-browser close`.
 
-**When to use headed mode**: Use `--headed` when you need the user to log in manually, solve CAPTCHAs, or verify visual state.
+**When to use headed mode**: Use `--headed` when user needs to log in manually, solve CAPTCHAs, or verify visual state.
 
 ## Enhanced Features
 
 | Feature | Usage |
 |---------|-------|
 | Stealth mode | `--stealth` or `AGENT_BROWSER_STEALTH=1` |
-| Auto-persistence | `--persist` |
-| Chrome profile | `--profile ~/.browser/my-profile` |
-| CDP mode | `connect 9222` |
+| Chrome profile | `--profile ~/.z-agent-browser/my-profile` |
+| CDP mode | `connect 9222` (or auto-detected) |
 | Video recording | `record start ./demo.webm` / `record stop` |
-
-## Import Existing Chrome Logins
-
-Chrome blocks remote debugging on your default profile for security. To use your existing logins, copy your profile:
-
-```bash
-# 1. Quit all Chrome instances
-pkill -9 "Google Chrome"
-
-# 2. Copy your Chrome profile
-cp -R "$HOME/Library/Application Support/Google/Chrome" /tmp/chrome-profile-copy
-
-# 3. Launch Chrome with debugging using the copy
-"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
-  --remote-debugging-port=9222 \
-  --user-data-dir="/tmp/chrome-profile-copy" &
-
-# 4. Connect z-agent-browser
-z-agent-browser connect 9222
-z-agent-browser open "https://github.com"
-```
-
-The copy includes all your cookies, saved passwords, localStorage, and extensions.
 
 ## Full Documentation
 

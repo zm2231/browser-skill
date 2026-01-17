@@ -5,18 +5,16 @@
 set -e
 
 PORT=9222
-PROFILE="$HOME/.browser/chrome-profile"
-STATE_DIR="$HOME/.browser"
+PROFILE="$HOME/.z-agent-browser/chrome-profile"
 TMUX_SESSION="z-chrome"
 
 # Create directories
-mkdir -p "$STATE_DIR"
-mkdir -p "$PROFILE"
+mkdir -p "$HOME/.z-agent-browser"
 
 # Check if Chrome is already running on the port
 if lsof -i :$PORT >/dev/null 2>&1; then
     echo "Chrome already running on port $PORT"
-    echo "Connect with: z-agent-browser --cdp $PORT <command>"
+    echo "z-agent-browser will auto-connect"
     exit 0
 fi
 
@@ -38,6 +36,12 @@ if tmux has-session -t $TMUX_SESSION 2>/dev/null; then
     tmux kill-session -t $TMUX_SESSION 2>/dev/null || true
 fi
 
+# Copy Chrome profile if it doesn't exist
+if [ ! -d "$PROFILE" ]; then
+    echo "Copying Chrome profile (first-time setup)..."
+    cp -R "$HOME/Library/Application Support/Google/Chrome" "$PROFILE"
+fi
+
 # Launch Chrome in tmux
 echo "Starting Chrome in tmux session '$TMUX_SESSION'..."
 tmux new-session -d -s $TMUX_SESSION \
@@ -54,9 +58,9 @@ for i in {1..20}; do
         echo ""
         echo "Chrome started on port $PORT"
         echo ""
-        echo "Usage:"
-        echo "  z-agent-browser --cdp $PORT open \"https://example.com\""
-        echo "  z-agent-browser --cdp $PORT snapshot -i"
+        echo "z-agent-browser will auto-connect. Just run:"
+        echo "  z-agent-browser open \"https://example.com\""
+        echo "  z-agent-browser snapshot -i"
         echo ""
         echo "To stop Chrome:"
         echo "  tmux kill-session -t $TMUX_SESSION"

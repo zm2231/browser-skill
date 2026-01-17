@@ -7,11 +7,9 @@ argument-hint: "<url>"
 
 Automate web browsing using z-agent-browser CLI.
 
-## CRITICAL: Browser Profiles
+## How It Works
 
-`z-agent-browser open` uses your system Chrome binary but with an **isolated profile** (no existing logins).
-
-**To use existing logins**, you MUST connect to Chrome with a profile copy. Always do this unless user explicitly requests "fresh/isolated browser".
+z-agent-browser now **auto-detects** Chrome on port 9222. If Chrome is running with `--remote-debugging-port=9222`, it connects automatically with all your logins.
 
 ## Execution Protocol
 
@@ -30,55 +28,45 @@ npm install -g z-agent-browser
 z-agent-browser install
 ```
 
-**Ensure auth persistence is configured:**
-
-```bash
-if [ -z "$AGENT_BROWSER_PERSIST" ]; then
-  if ! grep -q "AGENT_BROWSER_PERSIST" ~/.zshrc 2>/dev/null; then
-    echo 'export AGENT_BROWSER_PERSIST=1' >> ~/.zshrc
-    echo "Added AGENT_BROWSER_PERSIST=1 to ~/.zshrc"
-  fi
-  export AGENT_BROWSER_PERSIST=1
-fi
-echo "AGENT_BROWSER_PERSIST=$AGENT_BROWSER_PERSIST"
-```
-
 **Check if already connected to Chrome:**
 
 ```bash
 z-agent-browser get url 2>/dev/null && echo "CONNECTED" || echo "NOT_CONNECTED"
 ```
 
-**If NOT_CONNECTED**, set up Chrome profile (default):
+**If NOT_CONNECTED**, set up Chrome with your profile:
 
 Tell user: "I'll connect to your Chrome browser with all your existing logins. I need to close Chrome first - save any work!"
 
 Wait for user confirmation, then:
 
 ```bash
-# Quit Chrome
+# Quit existing Chrome
 pkill -9 "Google Chrome" 2>/dev/null || true
 sleep 1
 
-# Copy profile to temp location
-cp -R "$HOME/Library/Application Support/Google/Chrome" /tmp/chrome-profile-copy
+# Copy profile to persistent location
+PROFILE="$HOME/.z-agent-browser/chrome-profile"
+mkdir -p "$HOME/.z-agent-browser"
+cp -R "$HOME/Library/Application Support/Google/Chrome" "$PROFILE"
 
 # Launch Chrome with debugging
 "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
   --remote-debugging-port=9222 \
-  --user-data-dir="/tmp/chrome-profile-copy" &
+  --user-data-dir="$PROFILE" &
 
 sleep 2
 
-# Connect z-agent-browser
+# Connect z-agent-browser (or it will auto-connect on first command)
 z-agent-browser connect 9222
 ```
 
 Tell user: "Connected to your Chrome with all your existing logins!"
 
-**Only if user explicitly requests "fresh browser" or "Chrome for Testing":**
+**Only if user explicitly requests "fresh browser" or "isolated":**
 
 ```bash
+z-agent-browser close  # Kill daemon first
 z-agent-browser open "$ARGUMENTS" --headed
 ```
 
@@ -86,23 +74,19 @@ This opens isolated Chromium with no saved logins.
 
 ### Phase 1: Navigate to URL
 
-After Chrome is connected, navigate:
-
 ```bash
 z-agent-browser open "$ARGUMENTS"
 ```
 
-This navigates the connected Chrome (with your logins) to the target URL.
+If Chrome is running on port 9222, z-agent-browser auto-connects to it.
 
 ### Phase 2: Get Page State
-
-Get interactive elements with refs:
 
 ```bash
 z-agent-browser snapshot -i
 ```
 
-This returns elements with refs like `@e1`, `@e2` for interaction.
+Returns elements with refs like `@e1`, `@e2` for interaction.
 
 ### Phase 3: Interact
 
@@ -120,7 +104,7 @@ z-agent-browser press Enter         # Press key
 
 If page requires login that can't be automated:
 
-1. **Close daemon and reopen headed**:
+1. **Open headed browser**:
    ```bash
    z-agent-browser close
    z-agent-browser open "$URL" --headed
@@ -128,15 +112,9 @@ If page requires login that can't be automated:
 
 2. **Tell user to log in** in the visible browser window
 
-3. **Save auth state** after user completes login:
+3. **Continue after login**:
    ```bash
-   z-agent-browser state save ~/.z-agent-browser/auth.json
-   ```
-
-4. **Close and continue headless**:
-   ```bash
-   z-agent-browser close
-   z-agent-browser open "$URL"  # Auth restored if AGENT_BROWSER_PERSIST=1
+   z-agent-browser snapshot -i
    ```
 
 ## Quick Reference
@@ -150,12 +128,13 @@ If page requires login that can't be automated:
 | Fill | `z-agent-browser fill @ref "text"` |
 | Press key | `z-agent-browser press Enter` |
 | Screenshot | `z-agent-browser screenshot` |
-| Close | `z-agent-browser close` |
-| Save auth | `z-agent-browser state save <path>` |
+| Close daemon | `z-agent-browser close` |
+| Connect to Chrome | `z-agent-browser connect 9222` |
 
 ## Important Notes
 
-- **NEVER use Chrome for Testing** unless user explicitly requests it - always connect to their real Chrome
+- **CDP Auto-detection**: z-agent-browser checks port 9222 first - if Chrome is there, it connects
+- **Profile location**: `~/.z-agent-browser/chrome-profile`
 - **Always re-snapshot** after clicks that cause navigation
 - **Use refs** (`@e1`) not CSS selectors
 - Chrome profile copy preserves all logins, cookies, localStorage, extensions

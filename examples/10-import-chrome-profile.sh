@@ -3,7 +3,7 @@
 
 set -e
 
-PROFILE_COPY="/tmp/chrome-profile-copy"
+PROFILE="$HOME/.z-agent-browser/chrome-profile"
 
 echo "This script copies your Chrome profile to use existing logins."
 echo "Your main Chrome must be closed."
@@ -16,15 +16,16 @@ if pgrep -x "Google Chrome" > /dev/null; then
 fi
 
 echo "Copying Chrome profile (this may take a minute)..."
-rm -rf "$PROFILE_COPY"
-cp -R "$HOME/Library/Application Support/Google/Chrome" "$PROFILE_COPY"
-echo "  [ok] Copied to $PROFILE_COPY"
+mkdir -p "$HOME/.z-agent-browser"
+rm -rf "$PROFILE"
+cp -R "$HOME/Library/Application Support/Google/Chrome" "$PROFILE"
+echo "  [ok] Copied to $PROFILE"
 
 echo ""
 echo "Launching Chrome with remote debugging..."
 "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
   --remote-debugging-port=9222 \
-  --user-data-dir="$PROFILE_COPY" &
+  --user-data-dir="$PROFILE" &
 
 sleep 3
 
@@ -36,17 +37,16 @@ else
 fi
 
 echo ""
-echo "Testing connection..."
-z-agent-browser --cdp 9222 open "https://example.com"
-z-agent-browser --cdp 9222 snapshot -i
-z-agent-browser --cdp 9222 get title
+echo "Testing connection (z-agent-browser auto-detects CDP)..."
+z-agent-browser open "https://example.com"
+z-agent-browser snapshot -i
+z-agent-browser get title
 
 echo ""
 echo "Success! Your existing logins are available."
 echo ""
-echo "Usage:"
-echo "  z-agent-browser --cdp 9222 open 'https://github.com'"
-echo "  z-agent-browser --cdp 9222 snapshot -i"
+echo "Usage (no --cdp needed, auto-detected):"
+echo "  z-agent-browser open 'https://github.com'"
+echo "  z-agent-browser snapshot -i"
 echo ""
-echo "To stop:"
-echo "  pkill -f 'chrome-profile-copy'"
+echo "Profile location: $PROFILE"

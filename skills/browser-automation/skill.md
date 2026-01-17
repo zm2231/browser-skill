@@ -15,32 +15,13 @@ npm install -g z-agent-browser
 z-agent-browser install
 ```
 
-**Enable auth persistence** (auto-configured on first `/browser` command):
+## CDP Auto-Detection (New!)
 
-```bash
-export AGENT_BROWSER_PERSIST=1  # Add to ~/.zshrc if not present
-```
+z-agent-browser now **auto-detects** Chrome on port 9222:
+- If Chrome is running with `--remote-debugging-port=9222` → auto-connects with your logins
+- If no Chrome on 9222 → launches fresh isolated browser
 
-This auto-saves/restores cookies between sessions.
-
-## Default Behavior
-
-**Auto-detects system Chrome** - Uses your installed Chrome/Chromium automatically. Falls back to bundled Chromium only if no system browser found.
-
-## Important Notes
-
-**Daemon behavior**: The browser runs as a persistent daemon. Settings (headed/headless, stealth, etc.) are locked at daemon startup.
-
-**To change modes**: Close the daemon first, then reopen:
-```bash
-z-agent-browser close
-z-agent-browser open "https://site.com" --headed   # Now in headed mode
-```
-
-**When to use headed mode**: 
-- User needs to log in manually
-- CAPTCHAs or 2FA
-- Debugging visual issues
+This means if you set up Chrome once with your profile, z-agent-browser will use it automatically.
 
 ## Core Workflow
 
@@ -53,103 +34,66 @@ z-agent-browser open "https://site.com" --headed   # Now in headed mode
 
 ```bash
 # Navigation
-z-agent-browser open <url>        # Navigate (headless by default)
-z-agent-browser open <url> --headed  # Visible browser
-z-agent-browser back              # Go back
-z-agent-browser close             # Close browser daemon
+z-agent-browser open <url>           # Auto-connects to Chrome on 9222 if available
+z-agent-browser open <url> --headed  # Force visible browser
+z-agent-browser back                 # Go back
+z-agent-browser close                # Close browser daemon
 
 # Inspection
-z-agent-browser snapshot -i       # Interactive elements (recommended)
-z-agent-browser screenshot [path] # Screenshot
+z-agent-browser snapshot -i          # Interactive elements (recommended)
+z-agent-browser screenshot [path]    # Screenshot
 
 # Interaction (use @refs from snapshot)
-z-agent-browser click @e1         # Click
-z-agent-browser fill @e2 "text"   # Clear and type
-z-agent-browser type @e2 "text"   # Type without clearing
-z-agent-browser press Enter       # Press key
-z-agent-browser select @e1 "val"  # Select dropdown
+z-agent-browser click @e1            # Click
+z-agent-browser fill @e2 "text"      # Clear and type
+z-agent-browser type @e2 "text"      # Type without clearing
+z-agent-browser press Enter          # Press key
+z-agent-browser select @e1 "val"     # Select dropdown
 
 # Tabs
-z-agent-browser tab               # List tabs
-z-agent-browser tab new [url]     # New tab
+z-agent-browser tab                  # List tabs
+z-agent-browser tab new [url]        # New tab
 
 # Debug
-z-agent-browser console           # View console
-z-agent-browser eval "js code"    # Run JavaScript
+z-agent-browser console              # View console
+z-agent-browser eval "js code"       # Run JavaScript
 ```
 
 For complete command reference, see [reference.md](reference.md).
 
-## Auth Workflow
+## Using Your Chrome Logins
 
-With `AGENT_BROWSER_PERSIST=1` set (recommended):
-
-```bash
-# First time: login in headed mode
-z-agent-browser open "https://github.com/login" --headed
-# User logs in manually...
-z-agent-browser close   # Auth auto-saved
-
-# Later: auth auto-restored
-z-agent-browser open "https://github.com"   # Already logged in!
-```
-
-Without persist, use manual state save/load:
-```bash
-z-agent-browser state save ~/.browser/github.json
-z-agent-browser state load ~/.browser/github.json
-```
-
-## Browser Modes
-
-### System Chrome + Persist (Recommended)
-
-Uses your actual Chrome with your cookies and extensions:
+To browse with all your existing logins, set up Chrome with CDP once:
 
 ```bash
-export AGENT_BROWSER_EXECUTABLE_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
-export AGENT_BROWSER_PERSIST=1
-z-agent-browser open "https://example.com"
-```
+# 1. Quit existing Chrome
+pkill -9 "Google Chrome"
 
-### Bundled Chromium (Default if no executable set)
+# 2. Copy profile
+cp -R "$HOME/Library/Application Support/Google/Chrome" ~/.z-agent-browser/chrome-profile
 
-Uses Playwright's "Chrome for Testing" - isolated, no existing cookies:
-
-```bash
-z-agent-browser open "https://example.com"
-```
-
-### CDP Mode (Control existing Chrome)
-
-Connect to Chrome you launched with `--remote-debugging-port`:
-
-```bash
-# In another terminal:
+# 3. Launch Chrome with debugging
 "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
-  --remote-debugging-port=9222 &
+  --remote-debugging-port=9222 \
+  --user-data-dir="$HOME/.z-agent-browser/chrome-profile" &
 
-# Connect:
-z-agent-browser connect 9222
-z-agent-browser open "https://example.com"
+# 4. Now z-agent-browser auto-connects!
+z-agent-browser open "https://github.com"  # You're logged in!
 ```
 
-### Playwright MCP Mode (Experimental)
+Profile location: `~/.z-agent-browser/chrome-profile`
 
-Control your daily-driver Chrome via extension:
+## Important Notes
 
-```bash
-export AGENT_BROWSER_BACKEND=playwright-mcp
-export PLAYWRIGHT_MCP_EXTENSION_TOKEN=<from extension>
-z-agent-browser open "https://example.com"
-```
-
-Limited feature support - see [reference.md](reference.md).
+1. **CDP Auto-detection**: Checks port 9222 first, uses Chrome if available
+2. **Daemon behavior**: Browser runs as persistent daemon. Close with `z-agent-browser close`
+3. **To change modes**: Close daemon first, then reopen
+4. **Always use `snapshot -i`**: Reduces output size
+5. **Use refs (@e1, @e2)**: Not CSS selectors
+6. **Re-snapshot after navigation**: Refs change when page changes
 
 ## Tips
 
-1. Always use `snapshot -i` to reduce output size
-2. Use refs (@e1, @e2) rather than CSS selectors
-3. Re-snapshot after navigation or DOM changes
-4. Use `--headed` when you need user assistance
-5. Close daemon before changing modes: `z-agent-browser close`
+1. When user needs to log in manually → use `--headed` flag
+2. For CAPTCHAs or 2FA → headed mode
+3. Profile copy preserves: logins, cookies, localStorage, extensions
