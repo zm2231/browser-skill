@@ -4,16 +4,16 @@ Web browser automation for Claude Code, OpenCode, and AI agents. Headless or hea
 
 ## Installation
 
+**Step 1: Install the CLI**
 ```bash
 npm install -g z-agent-browser
 z-agent-browser install
 ```
 
-Then install the skill:
-```bash
-mkdir -p ~/.claude/skills/browser-automation
-curl -o ~/.claude/skills/browser-automation/skill.md \
-  https://raw.githubusercontent.com/zm2231/browser-skill/main/skills/browser-automation/skill.md
+**Step 2: Install the skill**
+```
+/plugin marketplace add zm2231/browser-skill
+/plugin install browser-skill@browser-skill-marketplace
 ```
 
 ### LLM Agents
