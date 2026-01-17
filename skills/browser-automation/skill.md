@@ -15,20 +15,17 @@ npm install -g z-agent-browser
 z-agent-browser install
 ```
 
-## Recommended Configuration
+## Default Behavior
 
-Use your system Chrome (not the bundled "Chrome for Testing") with auth persistence:
+**Auto-detects system Chrome** - Uses your installed Chrome/Chromium automatically. Falls back to bundled Chromium only if no system browser found.
+
+**Optional: Enable auth persistence** - Add to shell profile:
 
 ```bash
-# Add to shell profile (~/.zshrc or ~/.bashrc)
-export AGENT_BROWSER_EXECUTABLE_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 export AGENT_BROWSER_PERSIST=1
 ```
 
-This gives you:
-- Your existing cookies and logins
-- Auth automatically saved/restored between sessions
-- No confusing "Chrome for Testing" window
+This auto-saves/restores cookies between sessions.
 
 ## Important Notes
 
