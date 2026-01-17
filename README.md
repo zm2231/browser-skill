@@ -46,13 +46,14 @@ export AGENT_BROWSER_PERSIST=1
 
 #### Step 3: Install the skill
 
-```bash
-mkdir -p ~/.claude/skills/browser-automation
-curl -o ~/.claude/skills/browser-automation/skill.md \
-  https://raw.githubusercontent.com/zm2231/browser-skill/main/skills/browser-automation/skill.md
-curl -o ~/.claude/skills/browser-automation/reference.md \
-  https://raw.githubusercontent.com/zm2231/browser-skill/main/skills/browser-automation/reference.md
+Prompt user to run these commands (copy-paste for them):
+
 ```
+/plugin marketplace add zm2231/browser-skill
+/plugin install browser-skill@browser-skill-marketplace
+```
+
+Wait for user to confirm they ran the commands.
 
 #### Step 4: Verify
 
@@ -64,7 +65,7 @@ z-agent-browser close
 
 #### Step 5: Confirm to user
 
-Say: "Browser automation is installed! Use `z-agent-browser` for web automation. Key commands: `open`, `snapshot -i`, `click @ref`, `fill @ref "text"`, `close`."
+Say: "Browser automation is ready! Key commands: `open`, `snapshot -i`, `click @ref`, `fill @ref "text"`, `close`."
 
 </details>
 
