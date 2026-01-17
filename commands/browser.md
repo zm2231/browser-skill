@@ -37,6 +37,30 @@ fi
 echo "AGENT_BROWSER_PERSIST=$AGENT_BROWSER_PERSIST"
 ```
 
+**Check if credentials exist:**
+
+```bash
+ls ~/.z-agent-browser/state/ 2>/dev/null || echo "NO_SAVED_AUTH"
+```
+
+**If NO_SAVED_AUTH**, prompt user:
+
+> "This is your first time using browser automation. Would you like to log into your accounts now so I can save your credentials for future use? I'll open a visible browser window for you to log in."
+
+If user agrees:
+1. Open headed browser to a common login page (e.g., google.com or the target site):
+   ```bash
+   z-agent-browser open "$ARGUMENTS" --headed
+   ```
+2. Tell user: "Please log into any accounts you need. Let me know when you're done."
+3. After user confirms, close to save state:
+   ```bash
+   z-agent-browser close
+   ```
+4. State auto-saves with PERSIST=1. Continue to Phase 1.
+
+If user declines, proceed to Phase 1.
+
 ### Phase 1: Open URL
 
 Navigate to the target URL:
