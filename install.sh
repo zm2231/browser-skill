@@ -54,8 +54,8 @@ case $CLI_CHOICE in
     2)
         echo ""
         echo "Installing upstream npm..."
-        npm install -g z-agent-browser
-        z-agent-browser install
+        npm install -g agent-browser
+        agent-browser install
         echo "  [ok] Upstream installed"
         ;;
     3)

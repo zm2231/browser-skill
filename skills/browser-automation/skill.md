@@ -15,6 +15,26 @@ npm install -g z-agent-browser
 z-agent-browser install
 ```
 
+## Important Notes
+
+**Daemon behavior**: The browser runs as a persistent daemon. Environment variables (headed, stealth, etc.) are set at daemon startup and cannot be changed mid-session.
+
+**Mode switching**: Close the browser to switch between headed/headless modes:
+```bash
+z-agent-browser open "https://site.com" --headed   # Headed session
+z-agent-browser state save ~/.browser/auth.json
+z-agent-browser close                              # Kill daemon
+
+z-agent-browser state load ~/.browser/auth.json    # Fresh daemon (headless)
+z-agent-browser open "https://site.com"            # Cookies preserved
+```
+
+**When to use headed mode**: Use `--headed` when you need the user to:
+- Log in manually (captchas, 2FA, OAuth)
+- Solve CAPTCHAs
+- Verify visual state
+- Debug issues
+
 ## Core Workflow
 
 1. Navigate: `z-agent-browser open <url>`
@@ -52,6 +72,17 @@ z-agent-browser eval "js code"    # Run JavaScript
 
 For complete command reference, see [reference.md](reference.md).
 
+## Auth Persistence
+
+```bash
+# Save after login
+z-agent-browser state save ~/.browser/auth.json
+
+# Load in future sessions
+z-agent-browser state load ~/.browser/auth.json
+z-agent-browser open "https://app.example.com"
+```
+
 ## Backend Modes
 
 Two backends available. Commands work the same for both.
@@ -80,21 +111,11 @@ z-agent-browser open "https://example.com"
 
 **Limitations**: Some features unavailable (scroll, get text/html, video recording, state save/load). See [reference.md](reference.md) for full compatibility.
 
-## Auth Persistence (Native Only)
-
-```bash
-# Save after login
-z-agent-browser state save ~/.browser/auth.json
-
-# Load in future sessions
-z-agent-browser state load ~/.browser/auth.json
-z-agent-browser open "https://app.example.com"
-```
-
 ## Tips
 
-1. Always use `snapshot -i` to reduce output
+1. Always use `snapshot -i` to reduce output size
 2. Use refs (@e1, @e2) rather than CSS selectors
 3. Re-snapshot after navigation or DOM changes
-4. Save auth state after login (native mode)
+4. Save auth state after successful login
 5. Use `--headed` when you need user assistance
+6. Kill daemon before changing env vars: `z-agent-browser close`
