@@ -15,17 +15,17 @@ npm install -g z-agent-browser
 z-agent-browser install
 ```
 
-## Default Behavior
-
-**Auto-detects system Chrome** - Uses your installed Chrome/Chromium automatically. Falls back to bundled Chromium only if no system browser found.
-
-**Optional: Enable auth persistence** - Add to shell profile:
+**Enable auth persistence** (auto-configured on first `/browser` command):
 
 ```bash
-export AGENT_BROWSER_PERSIST=1
+export AGENT_BROWSER_PERSIST=1  # Add to ~/.zshrc if not present
 ```
 
 This auto-saves/restores cookies between sessions.
+
+## Default Behavior
+
+**Auto-detects system Chrome** - Uses your installed Chrome/Chromium automatically. Falls back to bundled Chromium only if no system browser found.
 
 ## Important Notes
 

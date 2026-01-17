@@ -35,7 +35,16 @@ npm install -g z-agent-browser
 z-agent-browser install
 ```
 
-#### Step 2: Install the skill
+#### Step 2: Enable auth persistence
+
+```bash
+if ! grep -q "AGENT_BROWSER_PERSIST" ~/.zshrc 2>/dev/null; then
+  echo 'export AGENT_BROWSER_PERSIST=1' >> ~/.zshrc
+fi
+export AGENT_BROWSER_PERSIST=1
+```
+
+#### Step 3: Install the skill
 
 ```bash
 mkdir -p ~/.claude/skills/browser-automation
@@ -45,7 +54,7 @@ curl -o ~/.claude/skills/browser-automation/reference.md \
   https://raw.githubusercontent.com/zm2231/browser-skill/main/skills/browser-automation/reference.md
 ```
 
-#### Step 3: Verify installation
+#### Step 4: Verify
 
 ```bash
 z-agent-browser open "https://example.com"
@@ -53,7 +62,7 @@ z-agent-browser snapshot -i
 z-agent-browser close
 ```
 
-#### Step 4: Tell the user
+#### Step 5: Confirm to user
 
 Say: "Browser automation is installed! Use `z-agent-browser` for web automation. Key commands: `open`, `snapshot -i`, `click @ref`, `fill @ref "text"`, `close`."
 
