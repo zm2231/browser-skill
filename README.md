@@ -4,8 +4,6 @@ Web browser automation for Claude Code, OpenCode, and AI agents. Headless or hea
 
 ## Installation
 
-### For Humans
-
 ```bash
 npm install -g z-agent-browser
 z-agent-browser install
@@ -19,7 +17,7 @@ curl -o ~/.claude/skills/browser-automation/skill.md \
   https://raw.githubusercontent.com/zm2231/browser-skill/main/skills/browser-automation/skill.md
 ```
 
-### For LLM Agents
+### LLM Agents
 
 Paste this into a fresh Claude Code / OpenCode session:
 ```
@@ -123,6 +121,29 @@ z-agent-browser open "https://site.com"
 | Chrome profile | `--profile ~/.browser/my-profile` |
 | CDP mode | `connect 9222` |
 | Video recording | `record start ./demo.webm` / `record stop` |
+
+## Import Existing Chrome Logins
+
+Chrome blocks remote debugging on your default profile for security. To use your existing logins, copy your profile:
+
+```bash
+# 1. Quit all Chrome instances
+pkill -9 "Google Chrome"
+
+# 2. Copy your Chrome profile
+cp -R "$HOME/Library/Application Support/Google/Chrome" /tmp/chrome-profile-copy
+
+# 3. Launch Chrome with debugging using the copy
+"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
+  --remote-debugging-port=9222 \
+  --user-data-dir="/tmp/chrome-profile-copy" &
+
+# 4. Connect z-agent-browser
+z-agent-browser connect 9222
+z-agent-browser open "https://github.com"
+```
+
+The copy includes all your cookies, saved passwords, localStorage, and extensions.
 
 ## Full Documentation
 
