@@ -362,27 +362,34 @@ Stealth mode applies evasions for:
 
 ## Playwright MCP Mode (Experimental)
 
-Control your existing Chrome browser via the Playwright MCP Bridge extension instead of launching a dedicated Chromium.
+Control your existing Chrome browser via the Playwright MCP extension instead of launching a dedicated Chromium. This lets you use your logged-in sessions and browser state.
+
+> **Source**: [microsoft/playwright-mcp](https://github.com/microsoft/playwright-mcp) - see [extension/README.md](https://github.com/microsoft/playwright-mcp/blob/main/extension/README.md)
 
 ### First-Time Setup
 
-**Step 1: Install the Chrome extension**
-1. Open Chrome and go to the Chrome Web Store
-2. Search for "Playwright MCP Bridge"
-3. Click "Add to Chrome" and confirm installation
+**Step 1: Download the extension**
+1. Go to [microsoft/playwright-mcp releases](https://github.com/microsoft/playwright-mcp/releases)
+2. Download the latest Chrome extension `.zip` file from Assets
+3. Extract the zip to a folder (e.g., `~/playwright-mcp-extension/`)
 
-**Step 2: Get your token**
-1. Click the Playwright MCP Bridge extension icon in Chrome toolbar
-2. Copy the token displayed in the popup
+**Step 2: Load the extension in Chrome**
+1. Open Chrome and navigate to `chrome://extensions/`
+2. Enable "Developer mode" (toggle in top right corner)
+3. Click "Load unpacked" and select the extracted extension folder
 
-**Step 3: Configure environment**
+**Step 3: Get your token**
+1. Click the Playwright MCP extension icon in Chrome toolbar
+2. Copy the `PLAYWRIGHT_MCP_EXTENSION_TOKEN` value displayed
+
+**Step 4: Configure environment**
 ```bash
 # Add to your shell profile (~/.zshrc or ~/.bashrc)
 export PLAYWRIGHT_MCP_EXTENSION_TOKEN=your-token-here
 export AGENT_BROWSER_BACKEND=playwright-mcp
 ```
 
-**Step 4: Verify**
+**Step 5: Verify**
 ```bash
 source ~/.zshrc  # or restart terminal
 z-agent-browser open "https://example.com"
