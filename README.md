@@ -97,15 +97,29 @@ z-agent-browser open "https://github.com"  # Already logged in!
 
 ### Option 2: CDP Mode (For Real Chrome)
 
-Connect to your actual Chrome browser with saved passwords:
+Connect to your actual Chrome browser with saved passwords.
 
+> **Important**: Chrome 136+ blocks CDP on the default profile for security. You must use `--user-data-dir` pointing to a separate directory.
+
+**First-time setup** (copy your Chrome profile once):
+```bash
+# macOS
+mkdir -p ~/.z-agent-browser
+cp -R "$HOME/Library/Application Support/Google/Chrome" ~/.z-agent-browser/chrome-profile
+
+# Linux
+cp -R ~/.config/google-chrome ~/.z-agent-browser/chrome-profile
+```
+
+**Launch Chrome with CDP**:
 ```bash
 # 1. Quit all Chrome instances
 pkill -9 "Google Chrome"
 
-# 2. Launch Chrome with debugging (visible browser)
+# 2. Launch Chrome with debugging + custom profile
 "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
-  --remote-debugging-port=9222 &
+  --remote-debugging-port=9222 \
+  --user-data-dir="$HOME/.z-agent-browser/chrome-profile" &
 
 # 3. z-agent-browser auto-connects!
 z-agent-browser open "https://github.com"  # You're logged in!

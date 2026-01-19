@@ -360,20 +360,38 @@ Stealth mode applies evasions for:
 
 ---
 
-## Playwright MCP Mode
+## Playwright MCP Mode (Experimental)
 
-Control your existing Chrome browser via the Playwright MCP extension instead of launching a dedicated Chromium.
+Control your existing Chrome browser via the Playwright MCP Bridge extension instead of launching a dedicated Chromium.
 
-### Setup
+### First-Time Setup
 
-1. Install "Playwright MCP Bridge" extension from Chrome Web Store
-2. Click extension icon to get your token
-3. Set environment variables:
+**Step 1: Install the Chrome extension**
+1. Open Chrome and go to the Chrome Web Store
+2. Search for "Playwright MCP Bridge"
+3. Click "Add to Chrome" and confirm installation
 
+**Step 2: Get your token**
+1. Click the Playwright MCP Bridge extension icon in Chrome toolbar
+2. Copy the token displayed in the popup
+
+**Step 3: Configure environment**
 ```bash
+# Add to your shell profile (~/.zshrc or ~/.bashrc)
 export PLAYWRIGHT_MCP_EXTENSION_TOKEN=your-token-here
 export AGENT_BROWSER_BACKEND=playwright-mcp
 ```
+
+**Step 4: Verify**
+```bash
+source ~/.zshrc  # or restart terminal
+z-agent-browser open "https://example.com"
+z-agent-browser snapshot -i
+```
+
+### Limitations
+
+Playwright MCP mode has reduced functionality compared to native mode - no state save/load, no stealth, no video recording. See compatibility table below.
 
 ### Feature Compatibility
 
@@ -513,17 +531,36 @@ Only use for trusted local servers.
 
 Connect to a running Chrome browser. Best for interactive use where user needs their real Chrome with saved passwords, or for CAPTCHA/2FA.
 
-**Important:** In CDP mode, headless/headed is determined by how Chrome was launched, not by z-agent-browser flags.
+> **Important (Chrome 136+)**: Chrome blocks CDP on the default profile for security. You must use `--user-data-dir` pointing to a separate directory.
 
-To set up Chrome for CDP:
+### First-Time Setup (Required)
+
+Copy your Chrome profile to a separate directory:
+
+```bash
+# macOS
+mkdir -p ~/.z-agent-browser
+cp -R "$HOME/Library/Application Support/Google/Chrome" ~/.z-agent-browser/chrome-profile
+
+# Linux
+mkdir -p ~/.z-agent-browser
+cp -R ~/.config/google-chrome ~/.z-agent-browser/chrome-profile
+
+# Windows (PowerShell)
+mkdir -Force "$env:USERPROFILE\.z-agent-browser"
+Copy-Item -Recurse "$env:LOCALAPPDATA\Google\Chrome\User Data" "$env:USERPROFILE\.z-agent-browser\chrome-profile"
+```
+
+### Launch Chrome with CDP
 
 ```bash
 # 1. Quit existing Chrome
 pkill -9 "Google Chrome"
 
-# 2. Launch Chrome with debugging (visible browser)
+# 2. Launch Chrome with debugging + custom profile (visible browser)
 "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
-  --remote-debugging-port=9222 &
+  --remote-debugging-port=9222 \
+  --user-data-dir="$HOME/.z-agent-browser/chrome-profile" &
 
 # 3. z-agent-browser auto-connects!
 z-agent-browser open "https://example.com"
@@ -532,8 +569,11 @@ z-agent-browser snapshot -i
 
 For **headless CDP** (rare - usually State Save/Load is better):
 ```bash
-google-chrome --headless=new --remote-debugging-port=9222 &
+google-chrome --headless=new --remote-debugging-port=9222 \
+  --user-data-dir="$HOME/.z-agent-browser/chrome-profile" &
 ```
+
+**Note**: In CDP mode, headless/headed is determined by how Chrome was launched, not by z-agent-browser flags.
 
 ### Connect Command (Enhanced Fork)
 
